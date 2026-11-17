@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AulaAI - Asistente Escolar</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1120;color:#fff;font-family:Arial,sans-serif}
+header{padding:20px 30px;background:#111c2e;border-bottom:1px solid #334155}
+h2{margin:0;color:#60a5fa}
+main{max-width:850px;margin:70px auto;padding:20px;text-align:center}
+h1{font-size:36px}
+p{color:#94a3b8}
+#chat{margin:30px auto;text-align:left}
+.msg{padding:15px;margin:12px 0;border-radius:12px;white-space:pre-wrap}
+.user{background:#1d3558}
+.bot{background:#1e293b}
+form{display:flex;gap:10px;margin-top:25px}
+input{flex:1;min-width:0;padding:16px;border-radius:12px;border:1px solid #475569;background:#1e293b;color:white}
+button{padding:15px 22px;border:0;border-radius:12px;background:#2563eb;color:white;cursor:pointer}
+</style>
+</head>
+<body>
+<header><h2>✦ AulaAI</h2></header>
+<main>
+<h1>¿Qué vamos a aprender hoy?</h1>
+<p>Tu asistente inteligente para estudiar.</p>
+<div id="chat"></div>
+<form id="form">
+<input id="question" placeholder="Escribe tu pregunta..." required>
+<button id="send">Enviar ➤</button>
+</form>
+</main>
+<script>
+const form=document.getElementById("form");
+const chat=document.getElementById("chat");
+const question=document.getElementById("question");
+const history=[];
+form.addEventListener("submit",async(e)=>{
+e.preventDefault();
+const text=question.value.trim();
+if(!text)return;
+question.value="";
+add("user","Tú: "+text);
+history.push({role:"user",content:text});
+const loading=add("bot","AulaAI está pensando...");
+document.getElementById("send").disabled=true;
+try{
+const response=await fetch("/api/chat",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({messages:history})
+});
+const data=await response.json();
+if(!response.ok)throw new Error(data.error||"Error de conexión");
+loading.textContent="AulaAI: "+data.answer;
+history.push({role:"assistant",content:data.answer});
+}catch(error){
+loading.textContent="AulaAI: "+error.message;
+history.pop();
+}
+document.getElementById("send").disabled=false;
+});
+function add(type,text){
+const div=document.createElement("div");
+div.className="msg "+type;
+div.textContent=text;
+chat.appendChild(div);
+return div;
+}
+</script>
+</body>
+</html>
